@@ -1,5 +1,5 @@
 [package]
-name = "terminal-tree"
+name = "terminal_tree"
 version = "0.1.0"
 edition = "2021"
 authors = [
@@ -9,3 +9,4 @@ repository = "https://github.com/heaths/terminal-tree-rs"
 license = "MIT"
 
 [dependencies]
+crossterm = "0.27.0"
