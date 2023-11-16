@@ -1,0 +1,11 @@
+[package]
+name = "terminal-tree"
+version = "0.1.0"
+edition = "2021"
+authors = [
+    "Heath Stewart (https://github.com/heaths)"
+]
+repository = "https://github.com/heaths/terminal-tree-rs"
+license = "MIT"
+
+[dependencies]
