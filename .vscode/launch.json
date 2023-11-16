@@ -14,23 +14,6 @@
       },
       "args": [],
       "cwd": "${workspaceFolder}"
-    },
-    {
-      "type": "lldb",
-      "request": "launch",
-      "name": "executable",
-      "cargo": {
-        "args": [
-          "build",
-          "--bin=main"
-        ],
-        "filter": {
-          "name": "main",
-          "kind": "bin"
-        }
-      },
-      "args": [],
-      "cwd": "${workspaceFolder}"
     }
   ]
 }
