@@ -1,12 +1,9 @@
 // Copyright 2023 Heath Stewart.
 // Licensed under the MIT License. See LICENSE.txt in the project root for license information.
 
-#![allow(dead_code, unused_imports, unused_variables)]
-
 use clap::Parser;
-use crossterm::style;
 use terminal_tree::{
-    clap::{ColorValue, ColorValueParser},
+    clap::{default_colors, default_indentation, range, ColorValue},
     TreeBuilder,
 };
 
@@ -26,10 +23,14 @@ fn main() {
 #[command(about = "Shows a simple tree of branches and leaves.")]
 struct Args {
     /// Optional array of colors to use repeatedly for branch lines.
-    #[arg(long, value_delimiter = ',', default_values_t = ColorValueParser::default_values(TreeBuilder::COLORS))]
+    #[arg(long, value_delimiter = ',', default_values_t = default_colors())]
     colors: Vec<ColorValue>,
 
     /// Optional level of indentation.
-    #[arg(long, default_value_t = TreeBuilder::INDENTATION)]
+    #[arg(long, value_parser = indentation, default_value_t = default_indentation())]
     indent: u8,
+}
+
+fn indentation(arg: &str) -> Result<u8, String> {
+    range(arg, 2, u8::MAX)
 }
