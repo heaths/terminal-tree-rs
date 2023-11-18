@@ -1,10 +1,7 @@
 // Copyright 2023 Heath Stewart.
 // Licensed under the MIT License. See LICENSE.txt in the project root for license information.
 
-#![allow(dead_code, unused_imports, unused_variables)]
-
 use clap::Parser;
-use crossterm::style;
 use terminal_tree::{
     clap::{ColorValue, ColorValueParser},
     TreeBuilder,
