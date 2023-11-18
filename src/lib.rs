@@ -22,7 +22,7 @@ pub struct TreeBuilder {
 }
 
 impl TreeBuilder {
-    pub const COLORS: &[Color] = &[
+    pub(crate) const COLORS: &[Color] = &[
         Color::Rgb {
             r: 0xff,
             g: 0xd7,
@@ -39,7 +39,7 @@ impl TreeBuilder {
             b: 0xff,
         },
     ];
-    pub const INDENTATION: u8 = 2;
+    pub(crate) const INDENTATION: u8 = 2;
 
     pub fn colors<I, C>(mut self, colors: I) -> Self
     where

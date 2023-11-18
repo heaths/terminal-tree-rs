@@ -3,9 +3,13 @@
 
 // cspell:ignore rrggbb
 
-use ::clap::{error, Arg, Command, Error, ValueEnum};
-use clap::builder::{PossibleValue, TypedValueParser, ValueParserFactory};
+use clap::{
+    builder::{PossibleValue, TypedValueParser, ValueParserFactory},
+    error::{ContextKind, ContextValue, ErrorKind, Result},
+    Arg, Command, Error, ValueEnum,
+};
 use crossterm::style;
+use std::{fmt, str};
 
 use crate::TreeBuilder;
 
@@ -45,12 +49,6 @@ impl From<ColorValue> for style::Color {
     }
 }
 
-impl From<ColorValue> for String {
-    fn from(value: ColorValue) -> Self {
-        String::from(&value)
-    }
-}
-
 impl From<&ColorValue> for String {
     fn from(value: &ColorValue) -> Self {
         match value.0 {
@@ -87,12 +85,6 @@ impl ValueParserFactory for ColorValue {
 #[derive(Clone)]
 pub struct ColorValueParser {}
 
-impl ColorValueParser {
-    pub fn default_values(values: &'static [style::Color]) -> impl Iterator<Item = ColorValue> {
-        values.iter().map(ColorValue::from)
-    }
-}
-
 impl TypedValueParser for ColorValueParser {
     type Value = ColorValue;
 
@@ -101,10 +93,10 @@ impl TypedValueParser for ColorValueParser {
         cmd: &Command,
         arg: Option<&Arg>,
         value: &std::ffi::OsStr,
-    ) -> Result<Self::Value, error::Error> {
+    ) -> Result<Self::Value, Error> {
         let value = value
             .to_str()
-            .ok_or_else(|| error::Error::new(error::ErrorKind::InvalidValue).with_cmd(cmd))?;
+            .ok_or_else(|| Error::new(ErrorKind::InvalidValue).with_cmd(cmd))?;
 
         if let Some(hex) = value.strip_prefix('#') {
             if hex.is_ascii() && hex.len() == 6 {
@@ -120,7 +112,20 @@ impl TypedValueParser for ColorValueParser {
 
         style::Color::try_from(value)
             .map(|v| v.into())
-            .map_err(|err| error::Error::new(error::ErrorKind::InvalidValue).with_cmd(cmd))
+            .map_err(|e| {
+                let mut err = Error::new(ErrorKind::ValueValidation).with_cmd(cmd);
+                if let Some(arg) = arg {
+                    err.insert(
+                        ContextKind::InvalidArg,
+                        ContextValue::String(arg.to_string()),
+                    );
+                }
+                err.insert(
+                    ContextKind::InvalidValue,
+                    ContextValue::String(value.to_string()),
+                );
+                err
+            })
     }
 
     fn possible_values(&self) -> Option<Box<dyn Iterator<Item = PossibleValue> + '_>> {
@@ -145,5 +150,28 @@ impl TypedValueParser for ColorValueParser {
         ];
 
         Some(Box::new(VARIANTS.iter().map(PossibleValue::new)))
+    }
+}
+
+pub fn default_colors() -> impl Iterator<Item = ColorValue> {
+    TreeBuilder::COLORS.iter().map(ColorValue::from)
+}
+
+pub fn default_indentation() -> u8 {
+    TreeBuilder::INDENTATION
+}
+
+pub fn range<T: PartialOrd + Ord + fmt::Display>(arg: &str, min: T, max: T) -> Result<T, String>
+where
+    T: str::FromStr,
+    <T as str::FromStr>::Err: fmt::Display,
+{
+    let value = arg.parse::<T>().map_err(|err| err.to_string())?;
+    if value > max {
+        Err(format!("exceeds maximum of {max}"))
+    } else if value < min {
+        Err(format!("exceeds minimum of {min}"))
+    } else {
+        Ok(value)
     }
 }
