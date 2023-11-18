@@ -4,12 +4,12 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "tests",
+      "name": "example: tree",
       "cargo": {
         "args": [
-          "test",
-          "--no-run",
-          "--lib"
+          "build",
+          "--example=tree",
+          "--features=clap"
         ]
       },
       "args": [],

@@ -1,12 +1,16 @@
 // Copyright 2023 Heath Stewart.
 // Licensed under the MIT License. See LICENSE.txt in the project root for license information.
 
+#![allow(dead_code, unused_imports, unused_variables)]
+
 use crossterm::{
     style::{Color, Stylize},
     terminal,
     tty::IsTty,
 };
 use std::{fmt::Display, io, vec};
+#[cfg(feature = "clap")]
+pub mod clap;
 
 const BRANCH: &str = "\u{251c}";
 const BRANCH_LAST: &str = "\u{2514}";
@@ -18,8 +22,31 @@ pub struct TreeBuilder {
 }
 
 impl TreeBuilder {
-    pub fn colors(mut self, colors: &[Color]) -> Self {
-        self._colors = colors.to_vec();
+    pub const COLORS: &[Color] = &[
+        Color::Rgb {
+            r: 0xff,
+            g: 0xd7,
+            b: 0x00,
+        },
+        Color::Rgb {
+            r: 0xda,
+            g: 0x70,
+            b: 0xd6,
+        },
+        Color::Rgb {
+            r: 0x17,
+            g: 0x9f,
+            b: 0xff,
+        },
+    ];
+    pub const INDENTATION: u8 = 2;
+
+    pub fn colors<I, C>(mut self, colors: I) -> Self
+    where
+        I: IntoIterator<Item = C>,
+        C: Into<Color>,
+    {
+        self._colors = colors.into_iter().map(C::into).collect::<Vec<_>>().to_vec();
         self
     }
 
@@ -49,24 +76,8 @@ impl Default for TreeBuilder {
     fn default() -> Self {
         TreeBuilder {
             // Default colors for Visual Studio Code.
-            _colors: vec![
-                Color::Rgb {
-                    r: 0xff,
-                    g: 0xd7,
-                    b: 0x00,
-                },
-                Color::Rgb {
-                    r: 0xda,
-                    g: 0x70,
-                    b: 0xd6,
-                },
-                Color::Rgb {
-                    r: 0x17,
-                    g: 0x9f,
-                    b: 0xff,
-                },
-            ],
-            _indentation: 2,
+            _colors: Self::COLORS.to_vec(),
+            _indentation: Self::INDENTATION,
         }
     }
 }

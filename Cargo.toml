@@ -2,6 +2,7 @@
 name = "terminal_tree"
 version = "0.1.0"
 edition = "2021"
+# rust-version = "1.60"
 authors = [
     "Heath Stewart (https://github.com/heaths)"
 ]
@@ -9,4 +10,12 @@ repository = "https://github.com/heaths/terminal-tree-rs"
 license = "MIT"
 
 [dependencies]
+clap = { version = "4.4.8", features = ["derive"], optional = true }
 crossterm = "0.27.0"
+
+[features]
+clap = ["dep:clap"]
+
+[[example]]
+name = "tree"
+required-features = ["clap"]
