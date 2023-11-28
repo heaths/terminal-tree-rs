@@ -8,12 +8,13 @@ use crossterm::{
     terminal,
     tty::IsTty,
 };
-use std::{fmt::Display, io, vec};
+use std::{fmt::Display, io, iter, vec};
 #[cfg(feature = "clap")]
 pub mod clap;
 
 const BRANCH: &str = "\u{251c}";
 const BRANCH_LAST: &str = "\u{2514}";
+const HORIZONTAL: &str = "\u{2500}";
 const VERTICAL: &str = "\u{2502}";
 
 pub struct TreeBuilder {
@@ -60,14 +61,39 @@ impl TreeBuilder {
         self
     }
 
-    pub fn indent(&self, level: u8) {
-        for i in 1..level {
-            let color = self._colors.iter().cycle().nth((i - 1) as usize).unwrap();
-            print!(
-                "{}{}",
-                VERTICAL.with(*color),
-                String::from_iter(vec![" "; (self._indentation - 1) as usize]),
-            )
+    fn indent(&self, f: &mut std::fmt::Formatter<'_>, level: u8) -> std::fmt::Result {
+        for i in 1..level as usize {
+            let color = self._colors.iter().cycle().nth(i - 1).unwrap();
+            let (style, indent) = if i == level as usize - 1 {
+                (
+                    BRANCH,
+                    String::from_iter(
+                        vec![HORIZONTAL; (self._indentation - 2) as usize]
+                            .into_iter()
+                            .chain(iter::once(" ")),
+                    ),
+                )
+            } else {
+                (
+                    VERTICAL,
+                    String::from_iter(vec![" "; (self._indentation - 1) as usize]),
+                )
+            };
+
+            write!(f, "{}{}", style.with(*color), indent.with(*color))?;
+        }
+
+        Ok(())
+    }
+
+    pub fn branch<T>(&self, item: T) -> TreeBranch<T>
+    where
+        T: Display,
+    {
+        TreeBranch {
+            builder: self,
+            level: 0,
+            item,
         }
     }
 }
@@ -82,27 +108,33 @@ impl Default for TreeBuilder {
     }
 }
 
-pub struct TreeItem<'a> {
+pub struct TreeBranch<'a, T> {
     builder: &'a TreeBuilder,
     level: u8,
+    item: T,
 }
 
-impl<'a> TreeItem<'a> {
-    pub fn branch<'b, I>(&self, items: I) -> Self
-    where
-        I: Iterator<Item = &'b str>,
-    {
-        todo!()
+impl<'a, T> TreeBranch<'a, T> {
+    pub fn branch(&self, item: T) -> TreeBranch<T> {
+        TreeBranch {
+            builder: self.builder,
+            level: self.level + 1,
+            item,
+        }
     }
 }
 
-impl<'a> Display for TreeItem<'a> {
+impl<'a, T> Display for TreeBranch<'a, T>
+where
+    T: Display,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        self.builder.indent(f, self.level)?;
+        write!(f, "{}", self.item)
     }
 }
 
-impl<'a> Drop for TreeItem<'a> {
+impl<'a, T> Drop for TreeBranch<'a, T> {
     fn drop(&mut self) {
         if self.level > 0 {
             self.level -= 1;
